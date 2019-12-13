@@ -63,13 +63,31 @@ function print(labelObj: {
 
 Now the Redux starts. We need to separate mapState and mapDispatch in `connect`.
 
-5. Define `mapState = (state: RootState)`, and `mapDispatch = { ... action creators }`.
-6. `const connector = connect(mapState, mapDispatch)`
+5. Define `mapState = (state: RootState)`. Define `mapDispatch` function with single parameter of type `Dispatch<>` that returns the result of `bindActionCreators` function.
+```
+const mapDispatch = (dispatch: Dispatch<AnyAction>) => bindActionCreators({
+    // Add Action Creators
+}, dispatch);
+```
+
+6. Define connector function: `const connector = connect(mapState, mapDispatch)`
 7. `type PropsFromRedux = ConnectedProps<typeof connector>`
-8. `type Props = PropsFromRedux & { .. other props }`
-bin
-Define component like usual; annotate props with `Props` type.
+8. Define interfaces for `OwnProps` and `OwnState`.
+9. Create new type that is combination of the return type of `mapState`, the return type of `mapDispatch` and `ownProps`. This combined type will be the type of our component's `props`.
+```
+type MyComponentProps = ReturnType<typeof mapState> & ReturnType<typeof mapDispatch> & OwnProps;
+```
+10. Create component with specified types for props and state:
+```
+class MyComponent extends React.Component<MyComponentProps, OwnState>
+```
+11. Export wrapped component: `export default connector(Component)`
 
-9. `export default connector(Component)`
 
-
+Organization-wise, remember that typescript objects (types, interfaces) can be defined at any point in the file, and used at any point (read: before they're defined). I like to order by file with:
+1. `OwnProps` and `OwnState` interface
+2. `MyComponentProps` type definition (type for our component's props)
+3. Define component
+4. `mapState` and `mapDispatch`
+5. `connector` function
+6. `export`
